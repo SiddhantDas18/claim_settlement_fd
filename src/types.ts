@@ -202,11 +202,13 @@ export interface Claim {
   policy_id: number
   status: ClaimStatus
   invoice_number: string | null
+  hospital_name: string | null
   treatment_start: string | null
   treatment_end: string | null
   description: string | null
   claimed_amount: number
   triage_category: TriageCategory | null
+  triage_reason: string | null
   approved_amount: number | null
   admin_note: string | null
   submitted_at: string | null
@@ -219,6 +221,7 @@ export interface Claim {
 
 export interface Calculation {
   currency: string
+  items_source: 'claimant' | 'bill'
   lines: { category: string; description: string; quantity: number; claimed: number; covered: number; note: string }[]
   total_claimed: number
   total_covered: number

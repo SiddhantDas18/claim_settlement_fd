@@ -52,3 +52,12 @@ export function formatValue(field: string, value: unknown): string {
   if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) return date(value)
   return String(value)
 }
+
+/** "Hospital bill (bill.pdf)" -> "Hospital bill"; "claim_form" -> "Claim form"; anything else as written. */
+export function shortSource(source: string): string {
+  if (source === 'claim_form') return 'Claim form'
+  if (source === 'system') return 'System'
+  // Uploaded documents are named "Hospital bill (bill.pdf)": show the document type, keep the file name for tooltips.
+  const uploaded = source.match(/^(.+?) \(([^()]+\.[a-z0-9]{2,5})\)( \(\d+\))?$/i)
+  return uploaded ? uploaded[1] : source
+}
