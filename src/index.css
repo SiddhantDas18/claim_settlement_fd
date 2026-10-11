@@ -315,3 +315,108 @@ details summary::marker { color: var(--muted); }
 .file-button { display: inline-block; font-weight: 600; border-radius: 8px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--border); background: var(--surface); }
 .file-button:hover { background: var(--surface-2); }
 .big-total { font-size: 1.15rem; }
+
+/* ================= Icons & motion (v3) ================= */
+:root { --ease: cubic-bezier(0.2, 0.7, 0.2, 1); --fast: 160ms; --med: 280ms; }
+.icon { flex: none; vertical-align: -0.15em; }
+.badge .icon { margin-left: -2px; }
+.brand-mark { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #7c3aed)); color: #fff; display: grid; place-items: center; box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 35%, transparent); }
+.brand { gap: 10px; }
+.nav a { display: inline-flex; align-items: center; gap: 7px; transition: background var(--fast) var(--ease), color var(--fast) var(--ease); }
+.back { display: inline-flex; align-items: center; gap: 6px; }
+.back .icon { transition: transform var(--fast) var(--ease); }
+.back:hover .icon { transform: translateX(-3px); }
+
+/* Buttons feel physical */
+button, .file-button { transition: background var(--fast) var(--ease), border-color var(--fast) var(--ease), transform 90ms var(--ease), box-shadow var(--fast) var(--ease), filter var(--fast); display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+button.link { display: inline-flex; }
+button:active:not(:disabled), .file-button:active { transform: scale(0.97); }
+button.primary { box-shadow: 0 1px 2px rgb(0 0 0 / 12%), 0 2px 8px color-mix(in srgb, var(--accent) 25%, transparent); }
+input, select, textarea { transition: border-color var(--fast) var(--ease), box-shadow var(--fast) var(--ease); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+
+/* Notices with an icon */
+.notice { display: flex; gap: 10px; align-items: flex-start; animation: fade-up var(--med) var(--ease) both; }
+.notice > .icon { margin-top: 1px; }
+.notice-text { flex: 1; min-width: 0; }
+
+/* Spinner + skeletons */
+.spinner-wrap { display: inline-flex; color: var(--accent); }
+.spin { animation: spin 0.9s linear infinite; }
+.skeleton-wrap { display: flex; flex-direction: column; gap: 10px; padding: 4px 0; }
+.skeleton { display: block; height: 12px; border-radius: 6px; background: linear-gradient(90deg, var(--surface-2) 0%, color-mix(in srgb, var(--surface-2) 40%, var(--border)) 50%, var(--surface-2) 100%); background-size: 200% 100%; animation: shimmer 1.3s ease-in-out infinite; }
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+/* Content enters gently, one block after another */
+@keyframes fade-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes pop { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
+.page > * { animation: fade-up var(--med) var(--ease) both; }
+.page > *:nth-child(2) { animation-delay: 40ms; }
+.page > *:nth-child(3) { animation-delay: 80ms; }
+.page > *:nth-child(4) { animation-delay: 120ms; }
+.page > *:nth-child(5) { animation-delay: 160ms; }
+.page > *:nth-child(n+6) { animation-delay: 200ms; }
+.issue { animation: fade-up var(--med) var(--ease) both; }
+.issue:nth-child(2) { animation-delay: 60ms; } .issue:nth-child(3) { animation-delay: 120ms; } .issue:nth-child(n+4) { animation-delay: 180ms; }
+.issue-title { display: inline-flex; align-items: center; gap: 7px; }
+.all-good .icon { animation: pop 420ms var(--ease) both; }
+
+/* Inbox */
+.inbox-row { transition: background var(--fast) var(--ease); }
+.inbox-row .chev { display: inline-flex; transition: transform var(--fast) var(--ease), color var(--fast); }
+.inbox-row:hover .chev { transform: translateX(3px); color: var(--text); }
+.tab { transition: color var(--fast) var(--ease), border-color var(--med) var(--ease); display: inline-flex; align-items: center; gap: 7px; }
+.search { position: relative; max-width: 280px; width: 100%; }
+.search .icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+.search input { padding-left: 32px; }
+.empty .empty-icon { color: var(--muted); opacity: 0.6; margin-bottom: 8px; }
+
+/* Tags and chips */
+.tag .icon { width: 11px; height: 11px; }
+.doc-chip { transition: border-color var(--fast) var(--ease), background var(--fast); }
+.doc-chip:hover { border-color: var(--accent); }
+.doc-chip > .icon { color: var(--accent); }
+
+/* Upload slots */
+.slot { transition: border-color var(--med) var(--ease), background var(--med) var(--ease), transform var(--fast) var(--ease); }
+.slot.dragging { transform: scale(1.01); }
+.slot-icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--surface-2); color: var(--muted); flex: none; transition: background var(--med), color var(--med); }
+.slot.filled .slot-icon { background: var(--ok); color: #fff; }
+.slot.filled .slot-icon .icon { animation: pop 420ms var(--ease) both; }
+.slot.problem .slot-icon { background: var(--orange); color: #fff; }
+.slot.uploading .slot-icon { color: var(--accent); }
+.file-row { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+/* Wizard steps */
+.wizard-steps .ws { transition: background var(--med) var(--ease), color var(--med) var(--ease); }
+.ws-num { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 0.75rem; background: color-mix(in srgb, currentColor 15%, transparent); }
+.wizard-steps .ws.done .ws-num { background: var(--ok); color: #fff; }
+.wizard-panel { animation: fade-up var(--med) var(--ease) both; }
+
+/* Progress line fills in */
+.progress .bar { position: relative; overflow: hidden; background: var(--border); }
+.progress .bar.done { background: var(--border); }
+.progress .bar.done::after { content: ''; position: absolute; inset: 0; background: var(--ok); transform-origin: left; animation: fill 500ms var(--ease) both; }
+@keyframes fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.progress .dot { width: 20px; height: 20px; }
+.progress .stage.done .dot .icon, .progress .stage.failed .dot .icon { animation: pop 380ms var(--ease) both; }
+.progress .stage.current .dot { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); animation: pulse 1.8s ease-out infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); } 100% { box-shadow: 0 0 0 8px transparent; } }
+.claim-card { transition: border-color var(--fast) var(--ease), transform var(--fast) var(--ease), box-shadow var(--fast) var(--ease); }
+.claim-card:hover { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); transform: translateY(-1px); }
+
+/* Payable amount counts in */
+.payable .amount { animation: fade-up 420ms var(--ease) both; }
+details > summary { transition: color var(--fast); list-style: none; display: inline-flex; align-items: center; gap: 6px; }
+details > summary::-webkit-details-marker { display: none; }
+details > summary .chevron { transition: transform var(--fast) var(--ease); }
+details[open] > summary .chevron { transform: rotate(90deg); }
+details[open] > :not(summary) { animation: fade-up var(--fast) var(--ease) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+  .spin { animation: spin 2.5s linear infinite !important; animation-iteration-count: infinite !important; }
+}
+/* Clickable cards and rows are buttons, but their content is laid out like a card, not centred like a button. */
+.claim-card { align-items: stretch; justify-content: flex-start; }
+.inbox-row { justify-content: stretch; }

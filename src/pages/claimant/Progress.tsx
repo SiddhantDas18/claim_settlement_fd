@@ -1,3 +1,5 @@
+import { Check, X } from 'lucide-react'
+import { Icon } from '../../components/ui'
 import type { Claim } from '../../types'
 
 const STAGES = ['Submitted', 'Under review', 'Approved', 'Paid'] as const
@@ -15,7 +17,7 @@ export default function Progress({ claim }: { claim: Claim }) {
           <span key={stage} className="row" style={{ gap: 0 }}>
             {i > 0 && <span className={`bar${done || rejectedHere ? ' done' : ''}`} />}
             <span className={`stage ${cls}`}>
-              <span className="dot" aria-hidden>{rejectedHere ? '✕' : done ? '✓' : ''}</span>
+              <span className="dot" aria-hidden>{rejectedHere ? <Icon icon={X} size={12} /> : done ? <Icon icon={Check} size={12} /> : null}</span>
               {rejectedHere ? 'Not approved' : stage}
             </span>
           </span>

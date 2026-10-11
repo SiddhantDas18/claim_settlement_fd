@@ -1,15 +1,16 @@
 import { useState, type ReactNode } from 'react'
 import { formatValue, humanize, label, money, shortSource } from '../format'
 import type { ClaimAnalysis, Fact, FieldSummary, LineItem, Provenance } from '../types'
-import { TriageChip } from './ui'
+import { ArrowLeftRight, CheckCircle2, ChevronRight, CircleHelp, FileText, Info, Lightbulb, PenLine, Sparkles, TriangleAlert } from 'lucide-react'
+import { Icon, StatusBadge, TriageChip } from './ui'
 
 const DETAIL_FIELDS = ['patient_name', 'hospital_name', 'invoice_number', 'admission_date', 'discharge_date', 'total_amount']
 
 /** Small tag saying where a value came from. Purple = produced by the system, never by the claimant. */
 export function SourceTag({ provenance, source }: { provenance: Provenance; source?: string }) {
-  if (provenance === 'system_inferred') return <span className="tag system" title="Produced by the system, not stated by the claimant">✦ System</span>
-  if (provenance === 'claimant_form') return <span className="tag form" title="Typed by the claimant on the claim form">✎ Claim form</span>
-  return <span className="tag doc" title={source ? `Read from: ${source}` : 'Read from a claimant document'}>▤ {source ? shortSource(source) : 'Document'}</span>
+  if (provenance === 'system_inferred') return <span className="tag system" title="Produced by the system, not stated by the claimant"><Icon icon={Sparkles} size={11} />System</span>
+  if (provenance === 'claimant_form') return <span className="tag form" title="Typed by the claimant on the claim form"><Icon icon={PenLine} size={11} />Claim form</span>
+  return <span className="tag doc" title={source ? `Read from: ${source}` : 'Read from a claimant document'}><Icon icon={FileText} size={11} />{source ? shortSource(source) : 'Document'}</span>
 }
 
 function Attention({ analysis }: { analysis: ClaimAnalysis }) {
@@ -26,7 +27,7 @@ function Attention({ analysis }: { analysis: ClaimAnalysis }) {
       </div>
       <div className="block-body">
         {nothingWrong ? (
-          <div className="all-good"><span aria-hidden>✓</span> All checks passed. Every required detail was provided and the documents agree.</div>
+          <div className="all-good"><Icon icon={CheckCircle2} size={22} />All checks passed. Every required detail was provided and the documents agree.</div>
         ) : (
           <p>{triage.reason}</p>
         )}
@@ -38,7 +39,7 @@ function Attention({ analysis }: { analysis: ClaimAnalysis }) {
           const clearMajority = [...counts.values()].filter((n) => n === max).length === 1
           return (
             <div key={c.field} className="issue conflict">
-              <span className="issue-title">⇄ {label(c.field)} doesn't match</span>
+              <span className="issue-title"><Icon icon={ArrowLeftRight} />{label(c.field)} doesn't match</span>
               <div className="said">
                 {c.values.map((v, i) => (
                   <span key={i} className={clearMajority && counts.get(JSON.stringify(v.value)) !== max ? 'odd' : ''} title={v.evidence ? `“${v.evidence}”` : 'Typed on the claim form'}>
@@ -52,21 +53,21 @@ function Attention({ analysis }: { analysis: ClaimAnalysis }) {
 
         {analysis.missing_fields.map((m) => (
           <div key={m.field} className="issue missing">
-            <span className="issue-title">? Missing: {label(m.field)}</span>
+            <span className="issue-title"><Icon icon={CircleHelp} />Missing: {label(m.field)}</span>
             <span className="small">{m.reason}</span>
           </div>
         ))}
 
         {warnings.map((w, i) => (
           <div key={i} className="issue warning">
-            <span className="issue-title">! Check</span>
+            <span className="issue-title"><Icon icon={TriangleAlert} />Check</span>
             <span className="small">{w.message}</span>
           </div>
         ))}
 
         {!nothingWrong && (
           <div className="stack" style={{ gap: 6 }}>
-            <div className="row small"><strong>Suggested next steps</strong><SourceTag provenance="system_inferred" /></div>
+            <div className="row small"><Icon icon={Lightbulb} /><strong>Suggested next steps</strong><SourceTag provenance="system_inferred" /></div>
             <ol className="steps-list">
               {analysis.recommendations.next_steps.map((s, i) => <li key={i}>{s.action}</li>)}
             </ol>
@@ -79,8 +80,8 @@ function Attention({ analysis }: { analysis: ClaimAnalysis }) {
 
 function FieldRow({ summary, facts, showSources }: { summary: FieldSummary; facts: Fact[]; showSources: boolean }) {
   let value: ReactNode
-  if (summary.status === 'missing') value = <span className="badge missing">? Missing</span>
-  else if (summary.status === 'conflicting') value = <span className="badge conflicting">⇄ Documents disagree</span>
+  if (summary.status === 'missing') value = <StatusBadge status="missing" />
+  else if (summary.status === 'conflicting') value = <StatusBadge status="conflicting" />
   else value = <strong>{formatValue(summary.field, summary.value)}</strong>
   return (
     <>
@@ -108,7 +109,7 @@ function Charges({ summary }: { summary: FieldSummary | undefined }) {
   return (
     <details>
       <summary>
-        {items.length} charges · {money(total)} <span className="muted small">(from {summary.sources.map(shortSource).join(', ')})</span>
+        <Icon icon={ChevronRight} className="chevron" />{items.length} charges · {money(total)} <span className="muted small">(from {summary.sources.map(shortSource).join(', ')})</span>
       </summary>
       <div className="table-wrap" style={{ marginTop: 8 }}>
         <table>
@@ -132,7 +133,7 @@ function TechnicalDetails({ analysis }: { analysis: ClaimAnalysis }) {
   const discarded = analysis.extractions.reduce((n, e) => n + e.guard_events.length, 0)
   return (
     <details className="small">
-      <summary className="muted">Technical details: AI model, prompt, discarded values ({discarded})</summary>
+      <summary className="muted"><Icon icon={ChevronRight} className="chevron" />Technical details: AI model, prompt, discarded values ({discarded})</summary>
       <div className="stack" style={{ gap: 8, marginTop: 8 }}>
         <span className="muted">Model {analysis.model} · prompt {analysis.prompt_version}. Every value the AI returns must come with an exact quote from the document; values the document doesn't support are discarded.</span>
         {analysis.extractions.map((e, i) => (
@@ -145,7 +146,7 @@ function TechnicalDetails({ analysis }: { analysis: ClaimAnalysis }) {
             ))}
           </div>
         ))}
-        {analysis.validation_flags.filter((f) => f.severity === 'info').map((f, i) => <div key={i} className="muted">ℹ {f.message}</div>)}
+        {analysis.validation_flags.filter((f) => f.severity === 'info').map((f, i) => <div key={i} className="muted row" style={{ gap: 6, alignItems: 'flex-start' }}><Icon icon={Info} size={14} />{f.message}</div>)}
       </div>
     </details>
   )

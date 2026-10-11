@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../api'
 import ClaimSummary from '../../components/ClaimSummary'
-import { Notice, Spinner } from '../../components/ui'
+import { Check, ChevronRight, Plus, Sparkles, Trash2, X } from 'lucide-react'
+import { Icon, Notice, Skeleton, Spinner } from '../../components/ui'
 import { humanize, label, SOURCE_TYPES } from '../../format'
 import type { AnalyzeRequest, ClaimAnalysis, ExampleCase, SourceType } from '../../types'
 
@@ -17,8 +18,8 @@ function Verdict({ example, analysis }: { example: ExampleCase; analysis: ClaimA
   const ok = checks.every(([, pass]) => pass)
   return (
     <Notice kind={ok ? 'success' : 'warn'}>
-      <strong>{ok ? '✓ Matches the expected result' : '! Differs from the expected result'}</strong>
-      {checks.map(([name, pass, expected]) => <div key={name} className="small">{pass ? '✓' : '✗'} {name}: expected {expected}</div>)}
+      <strong>{ok ? 'Matches the expected result' : 'Differs from the expected result'}</strong>
+      {checks.map(([name, pass, expected]) => <div key={name} className="small row" style={{ gap: 6 }}><Icon icon={pass ? Check : X} size={14} />{name}: expected {expected}</div>)}
     </Notice>
   )
 }
@@ -79,11 +80,11 @@ export default function TestCases() {
                 ))}
               </select>
             </label>
-            <button className="primary" disabled={busy || !input.sources.some((s) => s.text.trim())} onClick={run}>{busy ? 'Checking…' : 'Run AI check'}</button>
+            <button className="primary" disabled={busy || !input.sources.some((s) => s.text.trim())} onClick={run}>{busy ? <><Spinner label="Checking" />Checking…</> : <><Icon icon={Sparkles} />Run AI check</>}</button>
           </div>
           {example && <p className="muted small">{example.description}</p>}
           <details open={!selected}>
-            <summary className="small">Input: claim form and {input.sources.length} document(s)</summary>
+            <summary className="small"><Icon icon={ChevronRight} className="chevron" />Input: claim form and {input.sources.length} document(s)</summary>
             <div className="stack" style={{ marginTop: 10 }}>
               <div className="grid-3">
                 {(['patient_name', 'hospital_name', 'invoice_number', 'admission_date', 'discharge_date', 'total_amount'] as const).map((key) => (
@@ -100,19 +101,19 @@ export default function TestCases() {
                     <select value={s.type} onChange={(e) => setSource(i, { type: e.target.value as SourceType })} style={{ maxWidth: 200 }} aria-label="Document type">
                       {SOURCE_TYPES.map((t) => <option key={t} value={t}>{humanize(t)}</option>)}
                     </select>
-                    {input.sources.length > 1 && <button className="small danger" onClick={() => setInput({ ...input, sources: input.sources.filter((_, j) => j !== i) })}>Remove</button>}
+                    {input.sources.length > 1 && <button className="small danger" onClick={() => setInput({ ...input, sources: input.sources.filter((_, j) => j !== i) })}><Icon icon={Trash2} size={14} />Remove</button>}
                   </div>
                   <textarea value={s.text} rows={6} onChange={(e) => setSource(i, { text: e.target.value })} placeholder="Paste the document text" aria-label={`Text of ${s.name}`} />
                 </div>
               ))}
-              <div><button className="small" disabled={input.sources.length >= 10} onClick={() => setInput({ ...input, sources: [...input.sources, { name: `Document ${input.sources.length + 1}`, type: 'other', text: '' }] })}>+ Add document</button></div>
+              <div><button className="small" disabled={input.sources.length >= 10} onClick={() => setInput({ ...input, sources: [...input.sources, { name: `Document ${input.sources.length + 1}`, type: 'other', text: '' }] })}><Icon icon={Plus} size={14} />Add document</button></div>
             </div>
           </details>
         </div>
       </section>
 
       <Notice kind="error">{error}</Notice>
-      {busy && <section className="block"><div className="block-body"><div className="row"><Spinner /> The AI is reading each document (5–60 seconds)…</div></div></section>}
+      {busy && <section className="block"><div className="block-body"><div className="row"><Spinner /> The AI is reading each document (5–60 seconds)…</div><Skeleton lines={4} /></div></section>}
       {analysis && example && <Verdict example={example} analysis={analysis} />}
       {analysis && <ClaimSummary analysis={analysis} />}
     </div>

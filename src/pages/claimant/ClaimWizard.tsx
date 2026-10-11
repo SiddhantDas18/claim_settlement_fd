@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type DragEvent, type FormEvent } from 'react'
 import { api, openDocument } from '../../api'
-import { Notice, Spinner } from '../../components/ui'
+import { ArrowRight, Check, ChevronRight, FileCheck2, FileText, FileWarning, Plus, Send, UploadCloud, X } from 'lucide-react'
+import { BackLink, Icon, Notice, Skeleton, Spinner } from '../../components/ui'
 import { date, humanize, money } from '../../format'
 import { navigate } from '../../router'
 import type { Claim, ClaimDocument, Policy } from '../../types'
@@ -26,26 +27,30 @@ function Slot({ title, hint, required, docs, onFile, onRemove, uploading }: {
   }
   return (
     <div
-      className={`slot${docs.length ? (unreadable ? ' problem' : ' filled') : ''}${dragging ? ' dragging' : ''}`}
+      className={`slot${docs.length ? (unreadable ? ' problem' : ' filled') : ''}${dragging ? ' dragging' : ''}${uploading ? ' uploading' : ''}`}
       onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
       onDragLeave={() => setDragging(false)}
       onDrop={drop}
     >
-      <span className="slot-icon" aria-hidden>{docs.length ? (unreadable ? '⚠️' : '✅') : '📄'}</span>
+      <span className="slot-icon">
+        {uploading ? <Spinner size={22} label="Uploading" /> : <Icon icon={docs.length ? (unreadable ? FileWarning : FileCheck2) : UploadCloud} size={22} key={docs.length} />}
+      </span>
       <div className="slot-text">
         <strong>{title}{required ? ' *' : ' (optional)'}</strong>
-        {docs.length === 0 && <span className="muted small">{hint}. Drop a PDF or photo here.</span>}
+        {docs.length === 0 && <span className="muted small">{uploading ? 'Uploading and reading the text…' : `${hint}. Drop a PDF or photo here.`}</span>}
         {docs.map((d) => (
-          <span key={d.id} className="small">
-            {d.original_filename}{' '}
-            {d.extraction_method === 'failed' ? <span className="value-conflict">couldn't read it. Try a clearer photo or the PDF.</span> : <span className="muted">· read ✓</span>}{' '}
-            <button type="button" className="link small" onClick={() => onRemove(d.id)}>remove</button>
+          <span key={d.id} className="small file-row">
+            <Icon icon={FileText} size={14} />{d.original_filename}
+            {d.extraction_method === 'failed'
+              ? <span className="value-conflict">· couldn't read it. Try a clearer photo or the PDF.</span>
+              : <span className="muted file-row"><Icon icon={Check} size={13} />text read</span>}
+            <button type="button" className="link small" onClick={() => onRemove(d.id)} aria-label={`Remove ${d.original_filename}`}><Icon icon={X} size={13} />remove</button>
           </span>
         ))}
       </div>
-      {uploading ? <Spinner /> : (
+      {!uploading && (
         <label className="file-button">
-          {docs.length ? 'Add another' : 'Choose file'}
+          <Icon icon={docs.length ? Plus : UploadCloud} size={15} />{docs.length ? 'Add another' : 'Choose file'}
           <input type="file" accept={ACCEPT} onChange={(e) => { if (e.target.files?.[0]) onFile(e.target.files[0]); e.target.value = '' }} />
         </label>
       )}
@@ -57,7 +62,7 @@ function ClaimView({ claim }: { claim: Claim }) {
   const [error, setError] = useState('')
   return (
     <div className="page narrow">
-      <div><button className="link back" onClick={() => navigate('/my-claims')}>← My claims</button></div>
+      <div><BackLink onClick={() => navigate('/my-claims')}>My claims</BackLink></div>
       <section className="block">
         <div className="block-head"><h1 style={{ fontSize: '1.25rem' }}>{claim.hospital_name ?? 'Hospital stay'}</h1><span className="muted">#{claim.id}</span></div>
         <div className="block-body">
@@ -73,7 +78,7 @@ function ClaimView({ claim }: { claim: Claim }) {
             <div className="k">Documents</div>
             <div className="v">
               {claim.documents.map((d) => (
-                <span key={d.id} className="small">📄 {humanize(d.doc_type)}: <button className="link small" onClick={() => openDocument(`/api/v1/claims/${claim.id}/documents/${d.id}/file`).catch((e) => setError(e.message))}>{d.original_filename}</button></span>
+                <span key={d.id} className="small file-row"><Icon icon={FileText} size={14} />{humanize(d.doc_type)}: <button className="link small" onClick={() => openDocument(`/api/v1/claims/${claim.id}/documents/${d.id}/file`).catch((e) => setError(e.message))}>{d.original_filename}</button></span>
               ))}
             </div>
           </div>
@@ -113,7 +118,7 @@ export default function ClaimWizard({ id }: { id: number | null }) {
     reload().then((c) => { if (c?.documents.length) setStep(2) }).catch((e) => setError(e.message)).finally(() => setLoading(false))
   }, [reload])
 
-  if (loading) return <div className="page narrow"><div className="empty"><Spinner /></div></div>
+  if (loading) return <div className="page narrow"><section className="block"><div className="block-body"><Skeleton lines={5} /></div></section></div>
   if (claim && claim.status !== 'draft') return <ClaimView claim={claim} />
 
   async function saveDetails(e: FormEvent) {
@@ -188,17 +193,19 @@ export default function ClaimWizard({ id }: { id: number | null }) {
 
   return (
     <div className="page narrow">
-      <div><button className="link back" onClick={() => navigate('/my-claims')}>← My claims</button></div>
+      <div><BackLink onClick={() => navigate('/my-claims')}>My claims</BackLink></div>
       <h1>{claim ? 'Finish your claim' : 'New claim'}</h1>
       <div className="wizard-steps">
         {steps.map((s, i) => (
-          <span key={s} className={`ws${step === i + 1 ? ' active' : step > i + 1 ? ' done' : ''}`}>{step > i + 1 ? '✓' : i + 1} {s}</span>
+          <span key={s} className={`ws${step === i + 1 ? ' active' : step > i + 1 ? ' done' : ''}`}>
+            <span className="ws-num">{step > i + 1 ? <Icon icon={Check} size={12} /> : i + 1}</span>{s}
+          </span>
         ))}
       </div>
       <Notice kind="error">{error}</Notice>
 
       {step === 1 && (
-        <form className="block" onSubmit={saveDetails}>
+        <form className="block wizard-panel" onSubmit={saveDetails}>
           <div className="block-body">
             {policies.length > 1 && (
               <label className="field">Policy<select value={f.policy_id} disabled={!!claim} onChange={(e) => setF({ ...f, policy_id: e.target.value })}>{policies.map((p) => <option key={p.id} value={p.id}>{p.policy_number}</option>)}</select></label>
@@ -210,19 +217,19 @@ export default function ClaimWizard({ id }: { id: number | null }) {
             </div>
             <label className="field">Total amount on the bill (₹)<input className="big-total" type="number" min="1" step="0.01" value={f.claimed_amount} required onChange={(e) => setF({ ...f, claimed_amount: e.target.value })} placeholder="16450" /></label>
             <details>
-              <summary className="small">More details (optional)</summary>
+              <summary className="small"><Icon icon={ChevronRight} className="chevron" />More details (optional)</summary>
               <div className="stack" style={{ gap: 10, marginTop: 10 }}>
                 <label className="field">Bill / invoice number<input value={f.invoice_number} onChange={(e) => setF({ ...f, invoice_number: e.target.value })} /></label>
                 <label className="field">What happened?<input value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} placeholder="e.g. Admitted with dengue fever" /></label>
               </div>
             </details>
-            <div className="row"><span className="spacer" /><button className="primary" disabled={busy}>{busy ? 'Saving…' : 'Next: documents'}</button></div>
+            <div className="row"><span className="spacer" /><button className="primary" disabled={busy}>{busy ? <><Spinner label="Saving" />Saving…</> : <>Next: documents<Icon icon={ArrowRight} /></>}</button></div>
           </div>
         </form>
       )}
 
       {step === 2 && claim && (
-        <section className="block">
+        <section className="block wizard-panel">
           <div className="block-body">
             <p className="muted small">Upload a PDF or a clear photo of each document (max {MAX_MB} MB). We read the text automatically.</p>
             {SLOTS.map((s) => (
@@ -232,7 +239,7 @@ export default function ClaimWizard({ id }: { id: number | null }) {
             <div className="row">
               <button type="button" onClick={() => setStep(1)}>Back</button>
               <span className="spacer" />
-              <button className="primary" disabled={!requiredDone || !!uploading} onClick={() => setStep(3)}>Next: review</button>
+              <button className="primary" disabled={!requiredDone || !!uploading} onClick={() => setStep(3)}>Next: review<Icon icon={ArrowRight} /></button>
             </div>
             {!requiredDone && <span className="muted small">The hospital bill and the discharge summary are both needed.</span>}
           </div>
@@ -240,19 +247,19 @@ export default function ClaimWizard({ id }: { id: number | null }) {
       )}
 
       {step === 3 && claim && (
-        <section className="block">
+        <section className="block wizard-panel">
           <div className="block-body">
             <div className="details">
               <div className="k">Hospital</div><div className="v">{claim.hospital_name}</div>
               <div className="k">Stay</div><div className="v">{date(claim.treatment_start)} – {date(claim.treatment_end)}</div>
               <div className="k">Amount</div><div className="v"><strong>{money(claim.claimed_amount)}</strong></div>
-              <div className="k">Documents</div><div className="v">{claim.documents.map((d) => <span key={d.id} className="small">📄 {humanize(d.doc_type)}: {d.original_filename}</span>)}</div>
+              <div className="k">Documents</div><div className="v">{claim.documents.map((d) => <span key={d.id} className="small file-row"><Icon icon={FileText} size={14} />{humanize(d.doc_type)}: {d.original_filename}</span>)}</div>
             </div>
             <p className="small muted">Please check the details. After you submit, your documents are checked and the claim is reviewed by our team.</p>
             <div className="row">
               <button type="button" onClick={() => setStep(2)}>Back</button>
               <span className="spacer" />
-              <button className="primary" disabled={busy} onClick={submit}>{busy ? 'Submitting… (checking your documents)' : 'Submit claim'}</button>
+              <button className="primary" disabled={busy} onClick={submit}>{busy ? <><Spinner label="Submitting" />Submitting… checking your documents</> : <><Icon icon={Send} />Submit claim</>}</button>
             </div>
           </div>
         </section>

@@ -2,7 +2,7 @@
 
 React + TypeScript + Vite frontend for the AI claims intake assistant. The backend (FastAPI) lives in the sibling repo `../Claim_Settlement_BD`.
 
-No UI libraries: plain React, a small hash router (`src/router.ts`) and one stylesheet with light/dark design tokens (`src/index.css`).
+No UI component library: plain React, Lucide icons, a small hash router (`src/router.ts`) and one stylesheet with light/dark design tokens (`src/index.css`).
 
 ## Run
 
@@ -15,28 +15,30 @@ npm install
 npm run dev                                                    # http://localhost:5173
 ```
 
-The dev server proxies `/api` to `http://localhost:8000` (see `vite.config.ts`), so no CORS setup is needed. To point at another backend, set `VITE_API_URL`.
+The dev server proxies `/api` to `http://localhost:8000` (see `vite.config.ts`), so no CORS setup is needed. To point the dev proxy at another backend, set `BACKEND_URL` (e.g. `BACKEND_URL=http://localhost:8010 npm run dev`); for a separately hosted API, set `VITE_API_URL`.
 
-Log in with the admin account from the backend's `.env` (`ADMIN_EMAIL` / `ADMIN_PASSWORD`). Claimants register on the login page; an admin then adds a policy for them under **Users & policies**.
+Log in with the admin account from the backend's `.env` (`ADMIN_EMAIL` / `ADMIN_PASSWORD`). Claimants register on the login page; an admin then gives them a policy under **Settings**.
 
 ## Screens
 
 | Route | Who | What |
 |---|---|---|
-| `#/analyze` | admin | **Analyze playground**: load one of the 24 synthetic test cases (or paste your own form and document texts), run `POST /api/v1/analyze`, see the analysis and whether it matches the test case's expected result |
-| `#/claims` | admin | Claims queue with status and the system's triage recommendation |
-| `#/claims/:id` | admin | Claim review: claimant's form, uploaded documents (text-extraction method, OCR confidence, extracted text), intake analysis, settlement calculation, approve / reject, re-run analysis |
-| `#/payments` | admin | Pending / paid payouts, mark paid (UPI, bank, cheque, cash) |
-| `#/policies` | admin | Users and policies; create a policy for a claimant |
-| `#/my-claims` | claimant | My claims; create / edit a draft, upload documents (JPEG/PNG/WEBP/PDF), submit |
+| `#/claims/review`, `#/claims/pay`, `#/claims/history` | admin | **Claims inbox** with three tabs and search. Each row: claimant, amount, the system's triage and why |
+| `#/claim/:id` | admin | **One claim, three blocks:** 1. Needs attention (conflicts, missing items, checks, suggested next steps) · 2. Claim details (each fact with its source tags; "Show sources & quotes"; documents) · 3. Decision (payable amount, how it's calculated, approve / reject, then mark as paid in the same place) |
+| `#/test-cases` | admin | Run the AI check on one of the 24 synthetic test cases (or your own text) and see whether it matches the expected result |
+| `#/settings` | admin | Give a claimant a policy; list of claimants |
+| `#/my-claims` | claimant | My claims, each with a progress line: Submitted → Under review → Approved → Paid |
+| `#/claim/new`, `#/claim/:id` | claimant | **3-step wizard:** 1. Your stay (hospital, dates, total) · 2. Documents (slots for hospital bill, discharge summary, other; drag & drop) · 3. Review & submit. Submitted claims show their status |
 
-## How the analysis view shows the three rules
+Icons: [Lucide](https://lucide.dev) (`lucide-react`). Animations are CSS only (fade-in, upload "pop", progress fill, skeleton loading) and are switched off for people who set "reduce motion" in their system.
 
-`src/components/AnalysisView.tsx`
+## How the claim page shows the three rules
 
-- **Nothing invented:** a field no source provides shows a dashed amber **Missing** badge with the reason it is needed; missing documents are listed too.
-- **Claimant facts vs system output:** every value carries a badge: **Claim form** (typed by the claimant), **Document: name** (read from an uploaded document) or **System inferred** (purple: document type, expense category, computed sums, triage, next steps). Clicking a field row shows every source's value and the exact quote it came from.
-- **Conflicts are not resolved:** each conflict is a card with one column per source (value, provenance, quote); the field's value stays empty and the next steps tell the reviewer what to ask.
+`src/components/ClaimSummary.tsx`
+
+- **Nothing invented:** a field no source provides shows an amber **Missing** badge, and block 1 lists each missing item (including missing documents) with the reason it is needed.
+- **Claimant facts vs system output:** every value carries small source tags: **Claim form** (typed by the claimant), the document it was read from (e.g. **Hospital bill**), or purple **System** (expense categories, computed sums, triage, suggested next steps). "Show sources & quotes" shows every source's value with the exact quote it came from.
+- **Conflicts are not resolved:** block 1 shows what each source says side by side, with the odd one out outlined; the field shows "Documents disagree" instead of a value, and the next steps tell the reviewer what to ask.
 
 Every status uses a colour, an icon and a text label, never colour alone. Amounts are shown in INR with Indian digit grouping (₹1,24,600.00).
 

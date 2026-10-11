@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { api, setToken } from '../api'
-import { Notice } from '../components/ui'
+import { Brand, Notice } from '../components/ui'
 
 export default function Login({ onLogin }: { onLogin: () => void }) {
   const [mode, setMode] = useState<'login' | 'register'>('login')
@@ -35,7 +35,7 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
     <div className="login-wrap">
       <div className="card login-card">
         <div className="card-head">
-          <span className="brand-mark" aria-hidden>✚</span>
+          <Brand />
           <h1>Claim Intake Assistant</h1>
         </div>
         <form className="card-body" onSubmit={submit}>

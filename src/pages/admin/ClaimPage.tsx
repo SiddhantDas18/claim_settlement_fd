@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, ApiError, openDocument } from '../../api'
 import ClaimSummary, { SourceTag } from '../../components/ClaimSummary'
-import { ClaimStatusBadge, Notice, Spinner } from '../../components/ui'
+import { BadgeCheck, Banknote, ChevronRight, ExternalLink, FileText, RefreshCw, ScanText, TriangleAlert, XCircle } from 'lucide-react'
+import { BackLink, ClaimStatusBadge, Icon, Notice, Skeleton, Spinner } from '../../components/ui'
 import { date, dateTime, humanize, money } from '../../format'
 import { navigate } from '../../router'
 import type { Calculation, Claim, ClaimAnalysis, ClaimDocument, User } from '../../types'
@@ -18,10 +19,10 @@ function DocumentChips({ claim }: { claim: Claim }) {
         {claim.documents.length === 0 && <span className="muted small">None uploaded.</span>}
         {claim.documents.map((d) => (
           <span key={d.id} className="doc-chip">
-            📄 <span>{humanize(d.doc_type)}</span>
+            <Icon icon={FileText} /><span>{humanize(d.doc_type)}</span>
             <span className={`small ${d.extraction_method === 'failed' ? 'value-conflict' : 'muted'}`}>({READ[d.extraction_method ?? ''] ?? 'not read'})</span>
-            <button className="link small" onClick={() => openDocument(`/api/v1/claims/${claim.id}/documents/${d.id}/file`).catch((e) => setError(e.message))}>open</button>
-            {d.extracted_text && <button className="link small" onClick={() => setText(text?.id === d.id ? null : d)}>text</button>}
+            <button className="link small" onClick={() => openDocument(`/api/v1/claims/${claim.id}/documents/${d.id}/file`).catch((e) => setError(e.message))} title="Open the file"><Icon icon={ExternalLink} size={14} />open</button>
+            {d.extracted_text && <button className="link small" onClick={() => setText(text?.id === d.id ? null : d)} title="Show the text read from it"><Icon icon={ScanText} size={14} />text</button>}
           </span>
         ))}
       </div>
@@ -54,9 +55,9 @@ function Decision({ claim, calc, ready, onChanged }: { claim: Claim; calc: Calcu
 
   let body
   if (claim.status === 'draft') body = <p className="muted">The claimant hasn't submitted this claim yet.</p>
-  else if (claim.status === 'rejected') body = <p><span className="badge bad">Rejected</span> {claim.admin_note}</p>
+  else if (claim.status === 'rejected') body = <p className="row"><span className="badge bad"><Icon icon={XCircle} size={13} />Rejected</span>{claim.admin_note}</p>
   else if (claim.status === 'paid')
-    body = <p><span className="badge ok">✓ Paid</span> {money(claim.payment?.amount)} by {claim.payment?.method?.toUpperCase()} {claim.payment?.reference && `(ref ${claim.payment.reference})`} on {dateTime(claim.payment?.paid_at)}</p>
+    body = <p className="row"><span className="badge ok"><Icon icon={BadgeCheck} size={13} />Paid</span> {money(claim.payment?.amount)} by {claim.payment?.method?.toUpperCase()} {claim.payment?.reference && `(ref ${claim.payment.reference})`} on {dateTime(claim.payment?.paid_at)}</p>
   else if (claim.status === 'approved')
     body = (
       <>
@@ -67,7 +68,7 @@ function Decision({ claim, calc, ready, onChanged }: { claim: Claim; calc: Calcu
               <option value="upi">UPI</option><option value="bank">Bank transfer</option><option value="cheque">Cheque</option><option value="cash">Cash</option>
             </select>
             <input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="Reference / UTR (optional)" style={{ maxWidth: 240 }} aria-label="Payment reference" />
-            <button className="primary" disabled={busy} onClick={() => run(() => api.post(`/api/v1/admin/payments/${claim.payment!.id}/mark-paid`, { method, reference: reference || null }), 'Marked as paid.')}>Mark as paid</button>
+            <button className="primary" disabled={busy} onClick={() => run(() => api.post(`/api/v1/admin/payments/${claim.payment!.id}/mark-paid`, { method, reference: reference || null }), 'Marked as paid.')}><Icon icon={Banknote} />Mark as paid</button>
           </div>
         ) : <p className="muted">Approved for {money(0)}: nothing to pay.</p>}
       </>
@@ -77,12 +78,12 @@ function Decision({ claim, calc, ready, onChanged }: { claim: Claim; calc: Calcu
       <>
         <div className="payable">
           <span className="muted">Payable</span>
-          <span className="amount">{calc ? money(calc.payable) : <Spinner />}</span>
+          <span className="amount">{calc ? money(calc.payable) : <Spinner size={22} />}</span>
           {calc && <span className="muted small">of {money(calc.total_claimed)} claimed</span>}
         </div>
         {calc && (
           <details>
-            <summary>How it's calculated</summary>
+            <summary><Icon icon={ChevronRight} className="chevron" />How it's calculated</summary>
             <div className="stack" style={{ gap: 8, marginTop: 8 }}>
               <span className="row small muted">
                 {calc.items_source === 'bill' ? <>Charges as read from the bill by the AI <SourceTag provenance="system_inferred" /></> : <>Charges as typed by the claimant <SourceTag provenance="claimant_form" /></>}
@@ -100,13 +101,13 @@ function Decision({ claim, calc, ready, onChanged }: { claim: Claim; calc: Calcu
                   </tbody>
                 </table>
               </div>
-              {calc.flags.map((f, i) => <span key={i} className="small value-conflict">! {f}</span>)}
+              {calc.flags.map((f, i) => <span key={i} className="small value-conflict row" style={{ gap: 6 }}><Icon icon={TriangleAlert} size={14} />{f}</span>)}
             </div>
           </details>
         )}
         <label className="field">Note to the claimant (required to reject)<input value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Please confirm your admission date" /></label>
         <details>
-          <summary className="small">Pay a different amount</summary>
+          <summary className="small"><Icon icon={ChevronRight} className="chevron" />Pay a different amount</summary>
           <label className="field" style={{ marginTop: 8 }}>Amount (₹), the reason goes in the note<input type="number" min="0" step="0.01" value={override} onChange={(e) => setOverride(e.target.value)} /></label>
         </details>
         {!ready && <p className="small muted">Block 1 lists something to check. You can still decide, or ask the claimant first (write it in the note and reject, so they can file again).</p>}
@@ -172,27 +173,27 @@ export default function ClaimPage({ id }: { id: number }) {
     }
   }
 
-  if (!claim) return <div className="page narrow">{error ? <Notice kind="error">{error}</Notice> : <div className="empty"><Spinner /></div>}</div>
+  if (!claim) return <div className="page narrow">{error ? <Notice kind="error">{error}</Notice> : <section className="block"><div className="block-body"><Skeleton lines={6} /></div></section>}</div>
   const back = claim.status === 'approved' ? 'pay' : claim.status === 'submitted' ? 'review' : 'history'
 
   return (
     <div className="page narrow">
       <div className="page-head">
         <div>
-          <button className="link back" onClick={() => navigate(`/claims/${back}`)}>← Claims</button>
+          <BackLink onClick={() => navigate(`/claims/${back}`)}>Claims</BackLink>
           <div className="title-row" style={{ marginTop: 6 }}>
             <h1>{owner?.full_name ?? 'Claim'} · #{claim.id}</h1>
             <ClaimStatusBadge status={claim.status} />
           </div>
           <p className="sub">{claim.hospital_name ?? 'Hospital not given'} · {date(claim.treatment_start)} – {date(claim.treatment_end)} · claimed {money(claim.claimed_amount)}</p>
         </div>
-        {claim.status !== 'draft' && <button className="small" disabled={rerunning} onClick={rerun}>{rerunning ? 'Checking…' : 'Check documents again'}</button>}
+        {claim.status !== 'draft' && <button className="small" disabled={rerunning} onClick={rerun}><Icon icon={RefreshCw} size={14} className={rerunning ? 'spin' : ''} />{rerunning ? 'Checking…' : 'Check documents again'}</button>}
       </div>
       <Notice kind="success">{message}</Notice>
       <Notice kind="error">{error}</Notice>
 
       {rerunning || analysis === undefined ? (
-        <section className="block"><div className="block-body"><div className="row"><Spinner /> {rerunning ? 'The AI is reading the documents again…' : 'Loading…'}</div></div></section>
+        <section className="block"><div className="block-body"><div className="row"><Spinner /> {rerunning ? 'The AI is reading the documents again…' : 'Loading…'}</div><Skeleton lines={5} /></div></section>
       ) : analysis === null ? (
         <section className="block"><div className="block-body"><p className="muted">Not checked yet. Press “Check documents again”.</p><DocumentChips claim={claim} /></div></section>
       ) : (

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, getToken, setToken } from './api'
-import { Spinner } from './components/ui'
+import { FileText, FlaskConical, Inbox as InboxIcon, LogOut, Settings as SettingsIcon, type LucideIcon } from 'lucide-react'
+import { Brand, Icon, Spinner } from './components/ui'
 import ClaimPage from './pages/admin/ClaimPage'
 import Inbox from './pages/admin/Inbox'
 import Settings from './pages/admin/Settings'
@@ -11,12 +12,12 @@ import Login from './pages/Login'
 import { navigate, useRoute } from './router'
 import type { User } from './types'
 
-const ADMIN_NAV = [
-  { path: 'claims', label: 'Claims' },
-  { path: 'test-cases', label: 'Test cases' },
-  { path: 'settings', label: 'Settings' },
+const ADMIN_NAV: { path: string; label: string; icon: LucideIcon }[] = [
+  { path: 'claims', label: 'Claims', icon: InboxIcon },
+  { path: 'test-cases', label: 'Test cases', icon: FlaskConical },
+  { path: 'settings', label: 'Settings', icon: SettingsIcon },
 ]
-const CLAIMANT_NAV = [{ path: 'my-claims', label: 'My claims' }]
+const CLAIMANT_NAV = [{ path: 'my-claims', label: 'My claims', icon: FileText }]
 
 function Page({ user, route }: { user: User; route: string[] }) {
   const [section, id] = route
@@ -47,7 +48,7 @@ export default function App() {
     if (getToken()) loadUser()
   }, [loadUser])
 
-  if (user === undefined) return <div className="login-wrap"><Spinner /></div>
+  if (user === undefined) return <div className="login-wrap"><Spinner size={24} /></div>
   if (user === null) return <Login onLogin={loadUser} />
 
   const nav = user.role === 'admin' ? ADMIN_NAV : CLAIMANT_NAV
@@ -56,13 +57,13 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div className="brand"><span className="brand-mark" aria-hidden>✚</span>Claim Intake</div>
+        <div className="brand"><Brand />Claim Intake</div>
         <nav className="nav">
-          {nav.map((item) => <a key={item.path} href={`#/${item.path}`} className={section === item.path ? 'active' : ''}>{item.label}</a>)}
+          {nav.map((item) => <a key={item.path} href={`#/${item.path}`} className={section === item.path ? 'active' : ''}><Icon icon={item.icon} size={16} />{item.label}</a>)}
         </nav>
         <div className="user-box">
           <span>{user.full_name}</span>
-          <button className="small" onClick={() => { setToken(null); setUser(null); navigate('/') }}>Log out</button>
+          <button className="small" onClick={() => { setToken(null); setUser(null); navigate('/') }}><Icon icon={LogOut} size={14} />Log out</button>
         </div>
       </header>
       <main><Page user={user} route={route} /></main>
