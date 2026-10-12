@@ -27,7 +27,7 @@ function Attention({ analysis }: { analysis: ClaimAnalysis }) {
       </div>
       <div className="block-body">
         {nothingWrong ? (
-          <div className="all-good"><Icon icon={CheckCircle2} size={22} />All checks passed. Every required detail was provided and the documents agree.</div>
+          <div className="all-good"><Icon icon={CheckCircle2} size={18} />All checks passed. Every required detail was provided and the documents agree.</div>
         ) : (
           <p>{triage.reason}</p>
         )}

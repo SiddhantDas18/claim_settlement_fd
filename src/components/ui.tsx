@@ -23,7 +23,7 @@ export function Icon({ icon: Glyph, size = 16, className }: { icon: LucideIcon; 
   return <Glyph size={size} strokeWidth={2} className={`icon ${className ?? ''}`} aria-hidden />
 }
 
-export function Brand({ size = 18 }: { size?: number }) {
+export function Brand({ size = 15 }: { size?: number }) {
   return <span className="brand-mark"><Icon icon={ShieldPlus} size={size} /></span>
 }
 

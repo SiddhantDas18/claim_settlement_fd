@@ -1,6 +1,7 @@
 // Small fetch wrapper: adds the login token and turns FastAPI error bodies into readable messages.
 
-const BASE = import.meta.env.VITE_API_URL ?? ''
+// Backend address from .env (VITE_API_URL). Empty means same origin: the dev server proxies /api (vite.config.ts).
+const BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').replace(/\/+$/, '')
 const TOKEN_KEY = 'claim-intake-token'
 
 export function getToken(): string | null {

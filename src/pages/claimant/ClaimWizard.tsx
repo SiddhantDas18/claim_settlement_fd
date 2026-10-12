@@ -33,7 +33,7 @@ function Slot({ title, hint, required, docs, onFile, onRemove, uploading }: {
       onDrop={drop}
     >
       <span className="slot-icon">
-        {uploading ? <Spinner size={22} label="Uploading" /> : <Icon icon={docs.length ? (unreadable ? FileWarning : FileCheck2) : UploadCloud} size={22} key={docs.length} />}
+        {uploading ? <Spinner size={19} label="Uploading" /> : <Icon icon={docs.length ? (unreadable ? FileWarning : FileCheck2) : UploadCloud} size={19} />}
       </span>
       <div className="slot-text">
         <strong>{title}{required ? ' *' : ' (optional)'}</strong>
